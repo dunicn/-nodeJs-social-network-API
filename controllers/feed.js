@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const { validationResult } = require('express-validator/check');
+const { validationResult } = require('express-validator');
 
 const Post = require('../models/post');
 const User = require('../models/user');
@@ -140,6 +140,8 @@ exports.updatePost = (req, res, next) => {
       if (imageUrl !== post.imageUrl) {
         clearImage(post.imageUrl);
       }
+      console.log('POST IMAGE URL', post.imageUrl);
+      console.log('IMAGE URL', imageUrl);
       post.title = title;
       post.imageUrl = imageUrl;
       post.content = content;
@@ -178,7 +180,14 @@ exports.deletePost = (req, res, next) => {
       return Post.findByIdAndDelete(postId);
     })
     .then((result) => {
-      console.log(result);
+      return User.findById(req.userId);
+    })
+    .then((user) => {
+      user.posts.pull(postId);
+      return user.save();
+    })
+    .then((result) => {
+      // console.log(result);
       res.status(200).json({ message: 'Deleted post!' });
     })
     .catch((err) => {
